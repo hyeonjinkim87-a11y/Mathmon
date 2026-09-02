@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="default">
+	<title>Math Pokemon</title>
+	<link rel="manifest" href="manifest.json">
+	<link rel="apple-touch-icon" href="./assets/pokemon/025-pikachu.png">
+	<link rel="stylesheet" href="css/styles.css">
+	<script>
+		window.addEventListener('load', () => {
+			if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+		});
+	</script>
+</head>
+<body>
+	<section class="player-screen" id="playerScreen" aria-label="플레이어 등록">
+		<div class="player-box">
+			<div class="setup-view" id="nameSetup">
+				<p class="eyebrow">Math Pokemon</p>
+				<h1>안녕! 나는 너의 포켓몬 친구야! 🐾</h1>
+				<p class="setup-copy">먼저 네 이름을 알려줘!</p>
+				<form class="single-player-form" id="onboardingForm">
+					<input id="playerName" type="text" maxlength="12" placeholder="이름 입력" aria-label="플레이어 이름" autocomplete="name" required>
+					<button class="primary-action" type="submit">시작하기</button>
+				</form>
+			</div>
+			<div class="setup-view" id="pokemonSetup" hidden>
+				<p class="eyebrow">첫 번째 파트너</p>
+				<h1 id="pokemonSetupTitle"></h1>
+				<p class="setup-copy">어떤 포켓몬과 함께 모험을 떠날까?</p>
+				<div class="pokemon-choice-list" id="pokemonChoiceList"></div>
+				<button class="primary-action setup-button confirm-pokemon" id="choosePokemonButton" type="button" disabled>이 포켓몬과 함께 시작하기</button>
+			</div>
+			<div class="setup-view" id="pokemonConfirmSetup" hidden>
+				<p class="eyebrow">파트너 확인</p>
+				<h1 class="intro-message" id="pokemonConfirmTitle"></h1>
+				<p class="setup-copy" id="pokemonConfirmDescription"></p>
+				<div class="parent-actions"><button class="secondary-action" id="chooseAgainButton" type="button">다시 고르기</button><button class="primary-action" id="startAdventureButton" type="button">함께 모험 시작!</button></div>
+			</div>
+			<div class="setup-view" id="adventureIntroSetup" hidden>
+				<p class="eyebrow">모험 준비 완료</p>
+				<h1 class="intro-message" id="adventureIntroMessage"></h1>
+				<p class="setup-copy">잠시만 기다려줘...</p>
+			</div>
+		</div>
+	</section>
+	<section class="parent-modal" id="parentModal" hidden aria-label="부모 메뉴">
+		<div class="parent-dialog">
+			<div id="parentLockView">
+				<h2>부모 메뉴</h2>
+				<p>플레이어 관리를 위해 4자리 비밀번호를 입력해 주세요.</p>
+				<input class="parent-password" id="parentPassword" type="password" inputmode="numeric" maxlength="4" placeholder="4자리 비밀번호" aria-label="부모 비밀번호">
+				<p class="parent-error" id="parentError" aria-live="polite"></p>
+				<div class="parent-actions"><button class="primary-action" id="unlockParent" type="button">확인</button><button class="secondary-action" id="closeParent" type="button">닫기</button></div>
+			</div>
+			<div id="parentManageView" hidden>
+				<h2>플레이어 설정</h2>
+				<div class="settings-card"><p id="currentPlayerName"></p><button class="primary-action" id="renamePlayer" type="button">이름 변경</button><form class="player-form" id="renameForm" hidden><input id="renameInput" type="text" maxlength="12" aria-label="새 플레이어 이름" autocomplete="name"><button class="primary-action" type="submit">저장</button><button class="secondary-action" id="cancelRename" type="button">취소</button></form></div>
+				<div class="settings-card"><p>문제 난이도 설정 (여러 개 선택 가능)</p><div id="difficultyCheckboxGroup" class="difficulty-checkbox-group"><label><input type="checkbox" name="difficulty" value="oneDigitAddition"><span>한자리수 더하기</span></label><label><input type="checkbox" name="difficulty" value="twoDigitAddition" checked><span>두자리수 더하기</span></label><label><input type="checkbox" name="difficulty" value="easyCarryAddition"><span>받아올림 더하기 (쉬운버전)</span></label><label><input type="checkbox" name="difficulty" value="carryAddition"><span>받아올림 더하기</span></label><label><input type="checkbox" name="difficulty" value="easyBorrowSubtraction"><span>받아내림 빼기 (쉬운버전)</span></label><label><input type="checkbox" name="difficulty" value="borrowSubtraction"><span>받아내림 빼기</span></label><label><input type="checkbox" name="difficulty" value="multiplication"><span>구구단</span></label></div></div>
+				<div class="settings-card"><p>게임 배경 선택</p><div id="backgroundSelection" class="background-selection"></div></div>
+				<div class="settings-card"><p>게임 데이터 확인 · 백업 · 복원</p><button class="secondary-action" type="button" disabled>준비 중</button></div>
+				<div class="settings-card"><p>게임 데이터 초기화</p><button class="small-action delete-player" id="openResetData" type="button">게임 데이터 초기화</button></div>
+				<div class="settings-card"><p>개발 테스트용</p><button class="secondary-action" id="addTestPokemonButton" type="button">⚠️ 개발 테스트: 피카츄 추가</button><button class="small-action delete-player" id="removeTestPokemonButton" type="button">개발 테스트 포켓몬 삭제</button></div>
+				<div class="parent-actions"><button class="secondary-action" id="closeParentAfterManage" type="button">닫기</button></div>
+			</div>
+		</div>
+	</section>
+	<section class="parent-modal" id="resetModal" hidden aria-label="게임 데이터 초기화 확인"><div class="reset-dialog"><h2>게임 데이터를 초기화하시겠습니까?</h2><p>현재 이름, 스타팅 포켓몬, 포켓몬 레벨, XP, 포획 상태 등이 초기화됩니다.</p><p>도감 데이터는 초기화되지 않습니다.</p><div class="parent-actions"><button class="secondary-action" id="cancelResetData" type="button">취소</button><button class="small-action delete-player" id="confirmResetData" type="button">초기화</button></div></div></section>
+	<main class="game-shell is-hidden" id="gameShell">
+		<section class="math-panel" aria-label="수학 문제 영역">
+			<div class="brand"><span class="brand-ball" aria-hidden="true"></span> Math Pokemon</div>
+			<div class="problem-card">
+				<p class="eyebrow">오늘의 수학 문제</p>
+					<h1 id="questionText"></h1>
+				<input class="answer-box" id="answer" type="text" maxlength="3" aria-label="정답 입력" autocomplete="off" readonly>
+				<p class="feedback" id="feedback" aria-live="polite">숫자 키패드로 정답을 입력해 보세요!</p>
+				<div class="keypad" aria-label="숫자 키패드">
+					<button class="key" type="button" data-key="1">1</button><button class="key" type="button" data-key="2">2</button><button class="key" type="button" data-key="3">3</button>
+					<button class="key" type="button" data-key="4">4</button><button class="key" type="button" data-key="5">5</button><button class="key" type="button" data-key="6">6</button>
+					<button class="key" type="button" data-key="7">7</button><button class="key" type="button" data-key="8">8</button><button class="key" type="button" data-key="9">9</button>
+					<button class="key delete" type="button" data-key="delete">삭제</button><button class="key" type="button" data-key="0">0</button><button class="key confirm" type="button" data-key="confirm">확인</button>
+				</div>
+			</div>
+		</section>
+		<section class="pokemon-panel" aria-label="포켓몬 영역">
+			<div class="top-controls">
+				<button class="menu-button" id="parentMenuButton" type="button" aria-label="부모 메뉴 열기">부모 메뉴</button>
+				<button class="change-pokemon" id="changePokemonButton" type="button">포켓몬 선택</button>
+				<button class="dex-button" id="openDexButton" type="button">📖 포켓몬 도감</button>
+				<button class="trainer-button" id="changeTrainerButton" type="button">트레이너 변경</button>
+			</div>
+			<div class="habitat" aria-label="귀여운 임시 캐릭터">
+				<div class="trainer-area" aria-label="현재 트레이너"><img id="trainerImage" class="trainer-image" alt="트레이너"><span class="trainer-placeholder" aria-hidden="true">트레이너</span></div>
+				<div class="buddy" aria-hidden="true"><div class="buddy-image" id="buddyImage"></div>
+					<div class="sparkles" id="sparkles"></div>
+				</div>
+			</div>
+			<div class="reaction-bubble" id="reactionBubble" aria-live="polite"></div>
+			<div class="xp-float" id="xpFloat" aria-hidden="true">+10 XP</div>
+			<div class="streak-banner" id="streakBanner" aria-live="polite"></div>
+			<div class="starter-display" id="starterDisplay" aria-label="현재 포켓몬"></div>
+			<div class="stats" aria-label="플레이어 레벨과 경험치"><p id="displayPlayerName"></p><p>Lv.<span id="level">1</span></p><p>XP <span id="xp">0</span> / <span id="xpNext">50</span></p><div class="xp-progress" aria-hidden="true"><div class="xp-progress-bar" id="xpProgressBar"></div></div></div>
+			<div class="next-evolution-card" id="nextEvolutionCard" hidden aria-label="다음 진화 정보"><h4>다음 진화</h4><div id="nextEvolutionImageContainer" class="next-pokemon-image"></div><strong id="nextEvolutionName"></strong><p id="nextEvolutionLevel" class="evolution-method"></p></div>
+		</section>
+	</main>
+	<section class="collection-modal" id="collectionModal" hidden aria-label="포켓몬 선택"><div class="collection-dialog"><h2>누구를 키울까?</h2><div class="collection-list" id="collectionList"></div><div class="parent-actions"><button class="secondary-action" id="closeCollection" type="button">닫기</button></div></div></section>
+	<section class="trainer-modal" id="trainerModal" hidden aria-label="트레이너 선택"><div class="trainer-dialog"><h2>트레이너 선택</h2><div class="trainer-list" id="trainerList"></div><div class="parent-actions"><button class="secondary-action" id="closeTrainer" type="button">닫기</button></div></div></section>
+	<section class="dex-modal" id="dexModal" hidden aria-label="포켓몬 도감"><div class="dex-dialog"><div class="dex-header"><h2>📖 포켓몬 도감</h2><p class="dex-summary" id="dexSummary"></p></div><div class="dex-grid" id="dexGrid"></div><div class="parent-actions"><button class="secondary-action" id="closeDex" type="button">게임으로 돌아가기</button></div></div></section>
+	<section class="dex-detail" id="dexDetail" hidden aria-label="도감 상세 정보"><div class="dex-detail-box"><div class="dex-detail-image" id="dexDetailImage"></div><h3 id="dexDetailTitle"></h3><p id="dexDetailInfo"></p><p id="dexDetailOwnership"></p><p id="dexDetailProgress"></p><button class="secondary-action" id="closeDexDetail" type="button">닫기</button></div></section>
+	<section class="encounter-overlay" id="encounterOverlay" hidden aria-label="야생 포켓몬 발견"><div class="encounter-dialog"><h2>‼️ 포켓몬을 발견했습니다!</h2><p class="encounter-subtitle">어떤 포켓몬일까요?</p><div class="wild-silhouette" id="wildSilhouette"></div><p class="encounter-rarity" id="encounterRarity"></p><p class="encounter-status" id="encounterStatus"></p><div class="encounter-actions"><button class="challenge" id="challengeEncounter" type="button">포획 도전</button><button class="secondary-action" id="closeEncounter" type="button">게임으로 돌아가기</button></div></div></section>
+	<section class="capture-overlay" id="captureOverlay" hidden aria-label="포켓몬 포획 도전"><div class="capture-dialog"><h2 id="captureTitle">⚡ 포켓몬을 잡아보자!</h2><p class="capture-pokemon-name" id="capturePokemonName"></p><div id="captureSilhouette"></div><div class="capture-pokemon-image" id="capturePokemonImage" hidden></div><p id="captureInstruction"></p><div class="capture-progress" id="captureProgress">⭐ 0 / 0</div><p class="capture-result" id="captureResult"></p><div class="encounter-actions"><button class="secondary-action" id="closeCapture" type="button">게임으로 돌아가기</button><button class="primary-action" id="viewCapturedPokemon" type="button" hidden>포켓몬 확인</button></div></div></section>
+	<script src="js/game/gameState.js"></script>
+<script src="js/pokemon/pokemonData.js"></script>
+<script src="js/game/app.js"></script>
+</body>
+</html>
