@@ -322,7 +322,7 @@
 		}
 		.menu-button:hover { background: #fff; }
 		.habitat { width: min(90%, 470px); height: min(72vh, 500px); position: relative; z-index: 1; }
-		.trainer-area { position: absolute; left: 80%; bottom: 18%; z-index: 2; display: flex; align-items: flex-end; justify-content: center; width: clamp(160px, 34vw, 240px); height: clamp(260px, 50vh, 400px); pointer-events: none; }
+		.trainer-area { position: absolute; left: 2%; bottom: 18%; z-index: 2; display: flex; align-items: flex-end; justify-content: center; width: clamp(160px, 34vw, 240px); height: clamp(260px, 50vh, 400px); pointer-events: none; }
 		.trainer-image { display: none; width: 100%; height: 100%; object-fit: contain; object-position: bottom center; }
 		.trainer-area.is-loaded .trainer-image { display: block; }
 		.trainer-area.is-loaded .trainer-placeholder { display: none; }
