@@ -180,7 +180,8 @@
 
 		.game-shell {
 			width: 100%;
-			max-width: 100%;
+			max-width: 100vw;
+			height: 100vh;
 			min-height: 100vh;
 			display: flex;
 			overflow: hidden;
@@ -190,6 +191,8 @@
 
 		.math-panel {
 			width: 55%;
+			flex: 0 0 55%;
+			min-width: 0;
 			min-height: 100vh;
 			padding: clamp(92px, 9vh, 120px) clamp(20px, 5vw, 82px) clamp(28px, 5vh, 58px);
 			display: flex;
@@ -278,6 +281,8 @@
 
 		.pokemon-panel {
 			width: 45%;
+			flex: 0 0 45%;
+			min-width: 0;
 			min-height: 100vh;
 			position: relative;
 			overflow: hidden;
