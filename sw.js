@@ -1,4 +1,4 @@
-const CACHE_NAME = 'math-pokemon-v1';
+const CACHE_NAME = 'math-pokemon-v2';
 
 const ASSETS = [
 	'./',
@@ -12,6 +12,8 @@ const ASSETS = [
 	'./assets/trainers/trainer-1.png',
 	'./assets/trainers/trainer-2.png',
 	'./assets/trainers/trainer-3.png'
+	'./assets/bgm/main_bgm.mp3',
+	'./assets/bgm/catch_bgm.mp3'
 ];
 
 const POKEMON_ASSETS = [
@@ -33,12 +35,31 @@ const POKEMON_ASSETS = [
 	'150-mewtwo', '151-mew'
 ].map((filename) => `./assets/pokemon/${filename}.png`);
 
+// 1. 설치 및 새 자산 캐싱
 self.addEventListener('install', (event) => {
+	// 새 서비스 워커가 즉시 대기 상태를 건너뛰고 활성화되도록 유도
+	self.skipWaiting();
 	event.waitUntil(
 		caches.open(CACHE_NAME).then((cache) => cache.addAll([...ASSETS, ...POKEMON_ASSETS]))
 	);
 });
 
+// 2. 활성화 및 구버전 캐시 정리
+self.addEventListener('activate', (event) => {
+	event.waitUntil(
+		caches.keys().then((cacheNames) => {
+			return Promise.all(
+				cacheNames.map((cacheName) => {
+					if (cacheName !== CACHE_NAME) {
+						return caches.delete(cacheName);
+					}
+				})
+			);
+		}).then(() => self.clients.claim())
+	);
+});
+
+// 3. 네트워크 요청 가로채기
 self.addEventListener('fetch', (event) => {
 	if (event.request.method !== 'GET') return;
 
