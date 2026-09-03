@@ -3,6 +3,8 @@
 		const DEX_STORAGE_KEY = 'pokemonDex';
 		const LEGACY_PLAYER_KEY = 'mathPokemonPlayers';
 		const PARENT_PASSWORD = '1234';
+		const bgmAudio = document.getElementById('bgm-audio');
+		const bgmToggleBtn = document.getElementById('bgm-toggle-btn');
 		const answerInput = document.querySelector('#answer');
 		const feedback = document.querySelector('#feedback');
 		const xp = document.querySelector('#xp');

@@ -237,6 +237,7 @@ function testGen1PokemonData() {
 		let currentPlayer = loadGameData();
 		let pokemonDex = loadPokemonDex();
 		let streakCount = 0;
+		let isBgmMuted = false;
 		let reactionTimer;
 		let messageTimer;
 		let questionStartedAt = Date.now();
@@ -1094,6 +1095,43 @@ function testGen1PokemonData() {
 			}, duration);
 			return true;
 		}
+		function initBGM() {
+    if (!bgmAudio) return;
+    
+    bgmAudio.volume = 0.3; // 기본 볼륨 30%
+    
+    // BGM 토글 버튼 이벤트
+    if (bgmToggleBtn) {
+        bgmToggleBtn.addEventListener('click', toggleBGM);
+    }
+
+    // 첫 상호작용(클릭 등) 시 자동 재생 시도
+    const startAudioOnInteraction = () => {
+        if (!isBgmMuted && bgmAudio.paused) {
+            bgmAudio.play().then(() => {
+                document.removeEventListener('click', startAudioOnInteraction);
+            }).catch(err => console.log("BGM 자동재생 대기 중..."));
+        }
+    };
+    
+    document.addEventListener('click', startAudioOnInteraction, { once: true });
+}
+
+function toggleBGM() {
+    if (!bgmAudio) return;
+    
+    if (bgmAudio.paused) {
+        bgmAudio.play();
+        isBgmMuted = false;
+        bgmToggleBtn.textContent = "🔊 BGM ON";
+        bgmToggleBtn.classList.remove('muted');
+    } else {
+        bgmAudio.pause();
+        isBgmMuted = true;
+        bgmToggleBtn.textContent = "🔇 BGM OFF";
+        bgmToggleBtn.classList.add('muted');
+    }
+}
 
 		function startGame(showStartMessage = true) {
 			const currentPokemon = getCurrentPokemon();
@@ -1112,6 +1150,8 @@ function testGen1PokemonData() {
 			startBuddyMovement();
 			if (showStartMessage) showMessage(getRandomMessage('start'), 'start');
 			questionStartedAt = Date.now();
+
+			initBGM();
 		}
 
 		function createSinglePlayer(name) {
