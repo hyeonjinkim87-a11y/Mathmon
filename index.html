@@ -16,6 +16,7 @@
 	</script>
 </head>
 <body>
+	<audio id="bgm-audio" src="assets/bgm/main_bgm.mp3" loop preload="auto"></audio>
 	<section class="player-screen" id="playerScreen" aria-label="플레이어 등록">
 		<div class="player-box">
 			<div class="setup-view" id="nameSetup">
@@ -87,6 +88,7 @@
 		</section>
 		<section class="pokemon-panel" aria-label="포켓몬 영역">
 			<div class="top-controls">
+				<button class="menu-button" id="bgm-toggle-btn" type="button">🔊 BGM ON</button>
 				<button class="menu-button" id="parentMenuButton" type="button" aria-label="부모 메뉴 열기">부모 메뉴</button>
 				<button class="change-pokemon" id="changePokemonButton" type="button">포켓몬 선택</button>
 				<button class="dex-button" id="openDexButton" type="button">📖 포켓몬 도감</button>
