@@ -200,6 +200,27 @@ function testGen1PokemonData() {
 			};
 		}
 
+		function testEvolutionRuntime() {
+			const originalPlayer = currentPlayer;
+			const levelEvolutions = Object.entries(evolutionData).filter(([, evolution]) => evolution.evolutionMethod === 'level' && evolution.next);
+			const selectedEvolutions = [...levelEvolutions].sort(() => Math.random() - 0.5).slice(0, 10);
+			const checks = selectedEvolutions.map(([speciesId, evolution]) => {
+				currentPlayer = { activePokemonId: 'evolution-test', pokemonCollection: [{ id: 'evolution-test', speciesId, evolutionHistory: [] }] };
+				const beforeLevel = checkForEvolution(evolution.evolutionLevel - 1) === null;
+				const reachedLevel = checkForEvolution(evolution.evolutionLevel + 1)?.to === evolution.next;
+				currentPlayer.pokemonCollection[0].evolutionHistory = [evolution.next];
+				const duplicate = checkForEvolution(evolution.evolutionLevel + 1) === null;
+				return beforeLevel && reachedLevel && duplicate;
+			});
+			currentPlayer = null;
+			const missingActivePokemon = checkForEvolution(100) === null;
+			currentPlayer = originalPlayer;
+			const result = { randomTen: selectedEvolutions.length === 10 && checks.every(Boolean), beforeEvolutionLevel: checks.every(Boolean), duplicateEvolution: checks.every(Boolean), missingActivePokemon };
+			result.pass = Object.values(result).every(Boolean);
+			console.log('testEvolutionRuntime:', result.pass ? 'PASS' : 'FAIL', result);
+			return result;
+		}
+
 		const maxLevelMessages = ['{name}! 드디어 Lv.100이야! 👑', '최고 레벨 달성! 정말 대단해!', '{name}는 진정한 포켓몬 트레이너가 되었어!'];
 		const starterMessages = ['{name}! {pokemonName}와 함께 모험을 시작해보자!', '{pokemonName}가 {name}를 기다리고 있었어!', '{name}과(와) {pokemonName}의 멋진 모험이 시작됐어!'];
 		const encounterSettings = { 5: 0.10, 10: 0.12, 20: 0.14, 35: 0.16, 50: 0.18, 80: 0.20 };
@@ -770,6 +791,7 @@ function testGen1PokemonData() {
 		}
 
 		function getActivePokemon() {
+			if (!currentPlayer || !Array.isArray(currentPlayer.pokemonCollection)) return null;
 			return currentPlayer.pokemonCollection.find((pokemon) => pokemon.id === currentPlayer.activePokemonId) || currentPlayer.pokemonCollection[0] || null;
 		}
 
@@ -1315,9 +1337,11 @@ function toggleBGM() {
 
 		function checkForEvolution(newLevel) {
 			const activePokemon = getActivePokemon();
+			if (!activePokemon) return null;
 			const currentPokemonId = activePokemon.speciesId;
 			const evolution = evolutionData[currentPokemonId];
-			if (!evolution || !evolution.next || evolution.evolutionMethod !== 'level' || !evolution.evolutionLevel || newLevel < evolution.evolutionLevel || activePokemon.evolutionHistory.includes(evolution.next)) return null;
+			const evolutionHistory = Array.isArray(activePokemon.evolutionHistory) ? activePokemon.evolutionHistory : [];
+			if (!evolution || evolution.evolutionMethod !== 'level' || !evolution.next || !evolution.evolutionLevel || newLevel < evolution.evolutionLevel || evolutionHistory.includes(evolution.next)) return null;
 			return { from: currentPokemonId, to: evolution.next };
 		}
 
@@ -1325,11 +1349,17 @@ function toggleBGM() {
 			const activePokemonIndex = currentPlayer.pokemonCollection.findIndex((pokemon) => pokemon.id === currentPlayer.activePokemonId);
 			if (activePokemonIndex < 0) return '';
 			const activePokemon = currentPlayer.pokemonCollection[activePokemonIndex];
+			const evolvedSpecies = gen1PokemonById[evolution.to] || getPokemonSpeciesData(evolution.to);
+			if (!evolvedSpecies) return '';
+			const evolutionHistory = Array.isArray(activePokemon.evolutionHistory) ? activePokemon.evolutionHistory : [];
 			const evolvedPokemon = {
 				...activePokemon,
 				speciesId: evolution.to,
-				name: starterPokemonData[evolution.to].name,
-				evolutionHistory: [...activePokemon.evolutionHistory, evolution.to]
+				name: evolvedSpecies.name,
+				type: evolvedSpecies.type,
+				rarity: evolvedSpecies.rarity,
+				emoji: evolvedSpecies.emoji,
+				evolutionHistory: [...evolutionHistory, evolution.to]
 			};
 			currentPlayer.pokemonCollection[activePokemonIndex] = evolvedPokemon;
 			currentPlayer.activePokemonId = evolvedPokemon.id;
@@ -1337,7 +1367,8 @@ function toggleBGM() {
 			registerPokemonInDex(evolution.to);
 			updateCurrentPokemonDisplay();
 			saveGameData();
-			return `${starterPokemonData[evolution.from].name}가 진화했다!`;
+			const previousSpecies = gen1PokemonById[evolution.from] || getPokemonSpeciesData(evolution.from);
+			return `${previousSpecies?.name || evolution.from}가 진화했다!`;
 		}
 
 		function checkForFastAnswer() {
@@ -1369,7 +1400,9 @@ function toggleBGM() {
 			let message;
 			let messageType;
 			if (evolution) {
-				message = `${currentPlayer.name}의 ${starterPokemonData[evolution.from].name}가 ${starterPokemonData[evolution.to].name}로 진화했어!`;
+				const fromSpecies = gen1PokemonById[evolution.from] || getPokemonSpeciesData(evolution.from);
+				const toSpecies = gen1PokemonById[evolution.to] || getPokemonSpeciesData(evolution.to);
+				message = `${currentPlayer.name}의 ${fromSpecies?.name || evolution.from}가 ${toSpecies?.name || evolution.to}로 진화했어!`;
 				messageType = 'levelUp';
 			} else if (reachedMaxLevel) {
 				message = getRandomMessage('maxLevel');
